@@ -1,3 +1,5 @@
+// ignore_for_file: doc_directive_missing_closing_tag, doc_directive_unknown, public_member_api_docs, duplicate_ignore, avoid_positional_boolean_parameters
+
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
@@ -864,26 +866,23 @@ class _SlidingSheetState extends State<SlidingSheet>
       return result;
     }
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (isDialog) {
-          if (!widget.isDismissable) {
-            _onDismissPrevented(backButton: true);
-            return false;
-          } else {
-            return true;
-          }
-        } else {
-          if (!state.isCollapsed) {
-            snapToExtent(minExtent);
-            return false;
-          } else {
-            return true;
-          }
-        }
-      },
-      child: result,
-    );
+    return PopScope(
+  canPop: isDialog ? widget.isDismissable : state.isCollapsed,
+  onPopInvokedWithResult: (didPop,r) {
+    if (!didPop) return;
+
+    if (isDialog) {
+      if (!widget.isDismissable) {
+        _onDismissPrevented(backButton: true);
+      }
+    } else {
+      if (!state.isCollapsed) {
+        snapToExtent(minExtent);
+      }
+    }
+  },
+  child: result,
+);
   }
 
   Widget _buildSheet() {

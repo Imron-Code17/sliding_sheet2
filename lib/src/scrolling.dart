@@ -412,10 +412,20 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
       {double friction = 0.015}) async {
     // The iOS bouncing simulation just isn't right here - once we delegate
     // the ballistic back to the ScrollView, it will use the right simulation.
+    final metrics = FixedScrollMetrics(
+      minScrollExtent: 0,
+      maxScrollExtent: double.infinity,
+      pixels: currentExtent,
+      viewportDimension: viewportDimension,
+      axisDirection: AxisDirection.down,
+      devicePixelRatio: WidgetsBinding
+          .instance.platformDispatcher.views.first.devicePixelRatio,
+    );
+
     final simulation = ClampingScrollSimulation(
       position: currentExtent,
       velocity: velocity,
-      tolerance: physics.tolerance,
+      tolerance: physics.toleranceFor(metrics),
       friction: friction,
     );
 
@@ -440,8 +450,18 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
         // Make sure we pass along enough velocity to keep scrolling - otherwise
         // we just "bounce" off the top making it look like the list doesn't
         // have more to scroll.
+        final metrics = FixedScrollMetrics(
+          minScrollExtent: 0,
+          maxScrollExtent: double.infinity,
+          pixels: currentExtent,
+          viewportDimension: viewportDimension,
+          axisDirection: AxisDirection.down,
+          devicePixelRatio: WidgetsBinding
+              .instance.platformDispatcher.views.first.devicePixelRatio,
+        );
         velocity = ballisticController.velocity +
-            (physics.tolerance.velocity * ballisticController.velocity.sign);
+            (physics.toleranceFor(metrics).velocity *
+                ballisticController.velocity.sign);
         super.goBallistic(shouldMakeSheetNonDismissable ? 0.0 : velocity);
         ballisticController.stop();
 
