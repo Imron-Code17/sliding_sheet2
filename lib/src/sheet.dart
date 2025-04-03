@@ -24,6 +24,22 @@ typedef SheetListener = void Function(SheetState state);
 typedef OnDismissPreventedCallback = void Function(
     bool backButton, bool backDrop);
 
+
+class OffsetSheet {
+  final double? top;
+  final double? bottom;
+  final double? left;
+  final double? right;
+
+  const OffsetSheet({
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+  });
+}
+
+
 /// A widget that can be dragged and scrolled in a single gesture and snapped
 /// to a list of extents.
 ///
@@ -34,6 +50,8 @@ class SlidingSheet extends StatefulWidget {
   /// the content is bigger than the height that the sheet can expand to.
   /// {@endtemplate}
   final SheetBuilder? builder;
+
+  final SheetBuilder? offsetBuilder;
 
   /// {@template sliding_sheet.customBuilder}
   /// Allows you to supply your own custom sroll view. Useful for infinite lists
@@ -46,6 +64,7 @@ class SlidingSheet extends StatefulWidget {
   /// that wont be scrolled.
   /// {@endtemplate}
   final SheetBuilder? headerBuilder;
+  
 
   /// {@template sliding_sheet.footerBuilder}
   /// The builder for a footer that will be displayed at the bottom of the sheet
@@ -62,6 +81,8 @@ class SlidingSheet extends StatefulWidget {
   /// The base animation duration for the sheet. Swipes and flings may have a different duration.
   /// {@endtemplate}
   final Duration duration;
+
+  final OffsetSheet? offset;
 
   /// {@template sliding_sheet.color}
   /// The background color of the sheet.
@@ -266,11 +287,13 @@ class SlidingSheet extends StatefulWidget {
   SlidingSheet({
     Key? key,
     SheetBuilder? builder,
+    SheetBuilder? offsetBuilder,
     CustomSheetBuilder? customBuilder,
     SheetBuilder? headerBuilder,
     SheetBuilder? footerBuilder,
     SnapSpec snapSpec = const SnapSpec(),
     Duration duration = const Duration(milliseconds: 1000),
+    OffsetSheet? offset,
     Color? color,
     Color? backdropColor,
     Color shadowColor = Colors.black54,
@@ -298,11 +321,13 @@ class SlidingSheet extends StatefulWidget {
   }) : this._(
           key: key,
           builder: builder,
+          offsetBuilder: offsetBuilder,
           customBuilder: customBuilder,
           headerBuilder: headerBuilder,
           footerBuilder: footerBuilder,
           snapSpec: snapSpec,
           duration: duration,
+          offset: offset,
           color: color,
           backdropColor: backdropColor,
           shadowColor: shadowColor,
@@ -332,11 +357,13 @@ class SlidingSheet extends StatefulWidget {
   SlidingSheet._({
     Key? key,
     required this.builder,
+    required this.offsetBuilder,
     required this.customBuilder,
     required this.headerBuilder,
     required this.footerBuilder,
     required this.snapSpec,
     required this.duration,
+    required this.offset,
     required this.color,
     required this.backdropColor,
     required this.shadowColor,
@@ -385,6 +412,7 @@ class _SlidingSheetState extends State<SlidingSheet>
   final GlobalKey headerKey = GlobalKey();
   final GlobalKey footerKey = GlobalKey();
 
+  bool get hasOffset => widget.offsetBuilder != null;
   bool get hasHeader => widget.headerBuilder != null;
   bool get hasFooter => widget.footerBuilder != null;
 
@@ -926,6 +954,7 @@ class _SlidingSheetState extends State<SlidingSheet>
                 ),
               ),
             ),
+            
         ],
       ),
     );
@@ -958,22 +987,39 @@ class _SlidingSheetState extends State<SlidingSheet>
                   alignment: Alignment.bottomCenter,
                   child: FractionalTranslation(
                     translation: Offset(0, translation),
-                    child: SheetContainer(
-                      color: widget.color ?? Theme.of(context).cardColor,
-                      border: widget.border,
-                      margin: widget.margin,
-                      padding: EdgeInsets.fromLTRB(
-                        padding.left,
-                        hasHeader ? padding.top : 0.0,
-                        padding.right,
-                        hasFooter ? padding.bottom : 0.0,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned.fill(
+                          child: SheetContainer(
+                            color: widget.color ?? Theme.of(context).cardColor,
+                            border: widget.border,
+                            margin: widget.margin,
+                            padding: EdgeInsets.fromLTRB(
+                              padding.left,
+                              hasHeader ? padding.top : 0.0,
+                              padding.right,
+                              hasFooter ? padding.bottom : 0.0,
+                            ),
+                            elevation: widget.elevation,
+                            shadowColor: widget.shadowColor,
+                            customBorders: BorderRadius.vertical(
+                              top: Radius.circular(cornerRadius!),
+                            ),
+                            child: sheet,
+                          ),
+                        ),
+                        if(hasOffset)
+                    Positioned(
+                      top: widget.offset?.top,
+                      left: widget.offset?.left,
+                      right: widget.offset?.right,
+                      bottom: widget.offset?.bottom,
+                      child: _delegateInteractions(
+                        widget.offsetBuilder!(context, state),
                       ),
-                      elevation: widget.elevation,
-                      shadowColor: widget.shadowColor,
-                      customBorders: BorderRadius.vertical(
-                        top: Radius.circular(cornerRadius!),
-                      ),
-                      child: sheet,
+                    ),
+                      ],
                     ),
                   ),
                 ),

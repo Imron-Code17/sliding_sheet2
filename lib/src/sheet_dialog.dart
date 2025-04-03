@@ -56,12 +56,14 @@ Future<T?> showSlidingBottomSheet<T>(
               route: route,
               controller: controller,
               builder: dialog.builder,
+              offsetBuilder: dialog.offsetBuilder,
               customBuilder: dialog.customBuilder,
               headerBuilder: dialog.headerBuilder,
               footerBuilder: dialog.footerBuilder,
               listener: dialog.listener,
               snapSpec: snapSpec,
               duration: dialog.duration,
+              offset: dialog.offset,
               color: dialog.color ??
                   theme.bottomSheetTheme.backgroundColor ??
                   theme.dialogTheme.backgroundColor ??
@@ -116,6 +118,9 @@ class SlidingSheetDialog {
   /// {@macro sliding_sheet.builder}
   final SheetBuilder? builder;
 
+  /// {@macro sliding_sheet.offsetBuilder}
+  final SheetBuilder? offsetBuilder;
+
   /// {@macro sliding_sheet.customBuilder}
   final CustomSheetBuilder? customBuilder;
 
@@ -130,6 +135,9 @@ class SlidingSheetDialog {
 
   /// {@macro sliding_sheet.duration}
   final Duration duration;
+
+  /// {@macro sliding_sheet.offset}
+  final OffsetSheet offset;
 
   /// {@macro sliding_sheet.color}
   final Color? color;
@@ -204,11 +212,13 @@ class SlidingSheetDialog {
   /// Creates a wrapper class to show a [SlidingSheet] as a bottom sheet dialog.
   const SlidingSheetDialog({
     this.builder,
+    this.offsetBuilder,
     this.customBuilder,
     this.headerBuilder,
     this.footerBuilder,
     this.snapSpec = const SnapSpec(),
     this.duration = const Duration(milliseconds: 800),
+    this.offset = const OffsetSheet(),
     this.color,
     this.backdropColor = Colors.black54,
     this.shadowColor,
@@ -239,9 +249,12 @@ class SlidingSheetDialog {
 class _SlidingSheetRoute<T> extends PageRoute<T> {
   final Widget Function(BuildContext, Animation<double>, _SlidingSheetRoute<T>)
       builder;
+  final Widget Function(BuildContext, Animation<double>, _SlidingSheetRoute<T>)?
+      offsetBuilder;
   final Duration duration;
   _SlidingSheetRoute({
     required this.builder,
+    this.offsetBuilder,
     required this.duration,
     RouteSettings? settings,
   }) : super(
